@@ -1,20 +1,57 @@
-console.log("Cogni-Shield content script loaded");
+// main.js - UNIFIED CONTENT SCRIPT
+console.log("Cogni-Shield: Content script active.");
 
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === "COGNI_SHIELD_SETTINGS_CHANGED") {
-    console.log("Received settings:", msg.settings);
+/**
+ * The Brain: Orchestrates all features based on settings
+ */
+window.runShield = function(settings) {
+  if (!settings) return;
+  
+  console.log("Shield Sync -> Enabled:", settings.enabled, "Intensity:", settings.intensity);
 
-    if (window.applyVisualGuard) {
-      window.applyVisualGuard(msg.settings);
-    }
+  // 1. Core Sensory Firewall (Visual Guard)
+  // This handles the video slow-motion and dimming
+  if (window.applyVisualGuard) {
+    window.applyVisualGuard(settings);
   }
-});
-console.log("Gemini AI available?", typeof window.simplifyTextWithAI);
 
-window
-  .simplifyTextWithAI?.(
-    `The Eiffel Tower, located in Paris, France, was constructed between 1887 and 1889 as the entrance arch for the 1889 World's Fair. Standing at 324 meters tall, it was the tallest man-made structure in the world for 41 years. Today, it is one of the most recognizable structures globally and attracts millions of visitors each year, serving as a symbol of French art, culture, and engineering prowess.`
-  )
-  .then((result) => {
-    console.log("GEMINI TEST RESULT:", result);
-  });
+  // 2. Readability Mode (Text/Font adjustments)
+  if (settings.enabled && settings.readabilityMode) {
+    window.CogniShield?.enableReadability?.();
+  } else {
+    window.CogniShield?.disableReadability?.();
+  }
+
+  // 3. Focus Mode (Hiding distractions)
+  if (settings.enabled && settings.focusMode) {
+    window.FocusMode?.enable?.();
+  } else {
+    window.FocusMode?.disable?.();
+  }
+  
+  // 4. Cursor Spotlight
+  if (settings.enabled && settings.cursorSpotlight && window.enableCursorSpotlight) {
+    window.enableCursorSpotlight();
+  } else if (window.disableCursorSpotlight) {
+    window.disableCursorSpotlight();
+  }
+};
+
+// --- INITIALIZATION ---
+
+// 1. Initial Load from Storage
+chrome.storage.local.get(null, (settings) => {
+  window.runShield(settings);
+});
+
+// 2. Listen for Live Popup Updates
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === "COGNI_SHIELD_SETTINGS_CHANGED") {
+    window.runShield(msg.settings);
+    if (sendResponse) sendResponse({status: "ok"});
+  }
+  return true; // Keeps the message channel open
+});
+
+// 3. AI Helper (Available for features to call)
+console.log("Gemini AI Integration:", typeof window.simplifyTextWithAI !== "undefined" ? "READY" : "OFFLINE");
