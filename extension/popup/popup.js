@@ -4,6 +4,7 @@ const DEFAULT_SETTINGS = {
   focusMode: false,
   readabilityMode: false,
   semanticDecanter: false,
+  cursorSpotlight: false, // ✅ ADDED
   intensity: 3,
   theme: "light",
 };
@@ -23,6 +24,7 @@ const elements = {
   focusMode: document.getElementById("focusMode"),
   readabilityMode: document.getElementById("readabilityMode"),
   semanticDecanter: document.getElementById("semanticDecanter"),
+  cursorSpotlight: document.getElementById("cursorSpotlight"), // ✅ ADDED
   intensitySlider: document.getElementById("intensitySlider"),
   intensityValue: document.getElementById("intensityValue"),
   statusText: document.getElementById("statusText"),
@@ -58,15 +60,13 @@ function updateUI() {
   elements.focusMode.checked = settings.focusMode;
   elements.readabilityMode.checked = settings.readabilityMode;
   elements.semanticDecanter.checked = settings.semanticDecanter;
+  elements.cursorSpotlight.checked = settings.cursorSpotlight; // ✅ ADDED
 
   // Intensity slider
   elements.intensitySlider.value = settings.intensity;
   elements.intensityValue.textContent = INTENSITY_LABELS[settings.intensity];
 
-  // Status text
   updateStatusText();
-
-  // Disable features if master toggle is off
   updateDisabledState();
 }
 
@@ -77,19 +77,19 @@ function updateStatusText() {
       settings.focusMode && "Focus",
       settings.readabilityMode && "Readability",
       settings.semanticDecanter && "AI",
+      settings.cursorSpotlight && "Spotlight", // ✅ ADDED
     ].filter(Boolean);
 
-    if (activeFeatures.length > 0) {
-      elements.statusText.textContent = `Active: ${activeFeatures.join(", ")}`;
-    } else {
-      elements.statusText.textContent = "Cogni-Shield is active";
-    }
+    elements.statusText.textContent =
+      activeFeatures.length > 0
+        ? `Active: ${activeFeatures.join(", ")}`
+        : "Cogni-Shield is active";
   } else {
     elements.statusText.textContent = "Cogni-Shield is inactive";
   }
 }
 
-// Update disabled state of features and intensity
+// Disable feature controls if master toggle is off
 function updateDisabledState() {
   if (settings.enabled) {
     elements.featuresSection.classList.remove("disabled");
@@ -102,7 +102,7 @@ function updateDisabledState() {
   }
 }
 
-// Save settings to chrome.storage.local
+// Save settings
 function saveSettings(key, value) {
   settings[key] = value;
   chrome.storage.local.set({ [key]: value }, () => {
@@ -112,7 +112,7 @@ function saveSettings(key, value) {
   });
 }
 
-// Send message to content scripts
+// Notify content script
 function notifyContentScript() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs[0]) return;
@@ -124,20 +124,16 @@ function notifyContentScript() {
         focusMode: settings.focusMode,
         readabilityMode: settings.readabilityMode,
         semanticDecanter: settings.semanticDecanter,
+        cursorSpotlight: settings.cursorSpotlight, // ✅ ADDED
         intensity: settings.intensity,
       },
     });
   });
 }
 
-
 // Apply theme
 function applyTheme(theme) {
-  if (theme === "dark") {
-    document.body.classList.add("dark-theme");
-  } else {
-    document.body.classList.remove("dark-theme");
-  }
+  document.body.classList.toggle("dark-theme", theme === "dark");
 }
 
 // Toggle theme
@@ -150,38 +146,37 @@ function toggleTheme() {
 
 // Attach event listeners
 function attachEventListeners() {
-  // Master toggle
-  elements.masterToggle.addEventListener("change", (e) => {
-    saveSettings("enabled", e.target.checked);
-  });
+  elements.masterToggle.addEventListener("change", (e) =>
+    saveSettings("enabled", e.target.checked)
+  );
 
-  // Feature toggles
-  elements.focusMode.addEventListener("change", (e) => {
-    saveSettings("focusMode", e.target.checked);
-  });
+  elements.focusMode.addEventListener("change", (e) =>
+    saveSettings("focusMode", e.target.checked)
+  );
 
-  elements.readabilityMode.addEventListener("change", (e) => {
-    saveSettings("readabilityMode", e.target.checked);
-  });
+  elements.readabilityMode.addEventListener("change", (e) =>
+    saveSettings("readabilityMode", e.target.checked)
+  );
 
-  elements.semanticDecanter.addEventListener("change", (e) => {
-    saveSettings("semanticDecanter", e.target.checked);
-  });
+  elements.semanticDecanter.addEventListener("change", (e) =>
+    saveSettings("semanticDecanter", e.target.checked)
+  );
 
-  // Intensity slider
+  elements.cursorSpotlight.addEventListener("change", (e) =>
+    saveSettings("cursorSpotlight", e.target.checked)
+  ); // ✅ ADDED
+
   elements.intensitySlider.addEventListener("input", (e) => {
     const value = parseInt(e.target.value);
     elements.intensityValue.textContent = INTENSITY_LABELS[value];
   });
 
-  elements.intensitySlider.addEventListener("change", (e) => {
-    const value = parseInt(e.target.value);
-    saveSettings("intensity", value);
-  });
+  elements.intensitySlider.addEventListener("change", (e) =>
+    saveSettings("intensity", parseInt(e.target.value))
+  );
 
-  // Theme toggle
   elements.themeToggle.addEventListener("click", toggleTheme);
 }
 
-// Initialize on load
+// Init
 document.addEventListener("DOMContentLoaded", init);

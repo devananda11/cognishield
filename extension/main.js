@@ -1,12 +1,20 @@
 console.log("Cogni-Shield content script loaded");
 
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === "COGNI_SHIELD_SETTINGS_CHANGED") {
-    console.log("Received settings:", msg.settings);
+  if (msg.type !== "COGNI_SHIELD_SETTINGS_CHANGED") return;
 
-    if (window.applyVisualGuard) {
-      window.applyVisualGuard(msg.settings);
-    }
+  console.log("Received settings:", msg.settings);
+
+  // Existing Visual Guard
+  if (window.applyVisualGuard) {
+    window.applyVisualGuard(msg.settings);
+  }
+
+  // ✅ ADD THIS — Readability Mode
+  if (msg.settings.enabled && msg.settings.readabilityMode) {
+    window.CogniShield?.enableReadability();
+  } else {
+    window.CogniShield?.disableReadability();
   }
 });
 console.log("Gemini AI available?", typeof window.simplifyTextWithAI);
