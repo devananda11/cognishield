@@ -1,24 +1,20 @@
 // main.js - UNIFIED CONTENT SCRIPT
 console.log("Cogni-Shield: Content script active.");
 
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type !== "COGNI_SHIELD_SETTINGS_CHANGED") return;
+/**
+ * Unified Runner: Handles all feature toggles based on settings
+ */
+window.runShield = function(settings) {
+  if (!settings) return;
+  
+  console.log("Applying Cogni-Shield settings:", settings);
 
-  console.log("Received settings:", msg.settings);
-
-  // Existing Visual Guard
+  // 1. Visual Guard (Flash/Luminance Protection)
   if (window.applyVisualGuard) {
-    window.applyVisualGuard(msg.settings);
+    window.applyVisualGuard(settings);
   }
 
-  // ✅ ADD THIS — Readability Mode
-  if (msg.settings.enabled && msg.settings.readabilityMode) {
-    window.CogniShield?.enableReadability();
-  } else {
-    window.CogniShield?.disableReadability();
-  }
-
-  // 2. Readability Mode (Text/Font adjustments)
+  // 2. Readability Mode (Font/Text adjustments)
   if (settings.enabled && settings.readabilityMode) {
     window.CogniShield?.enableReadability?.();
   } else {
@@ -50,11 +46,12 @@ chrome.storage.local.get(null, (settings) => {
 // 2. Listen for Live Popup Updates
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "COGNI_SHIELD_SETTINGS_CHANGED") {
+    // Pass the settings object from the message to the runner
     window.runShield(msg.settings);
     if (sendResponse) sendResponse({status: "ok"});
   }
-  return true; // Keeps the message channel open
+  return true; // Keeps the message channel open for async responses
 });
 
-// 3. AI Helper (Available for features to call)
+// 3. AI Helper Status Check
 console.log("Gemini AI Integration:", typeof window.simplifyTextWithAI !== "undefined" ? "READY" : "OFFLINE");
