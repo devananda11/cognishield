@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cogni-Shield</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1 class="title">Cogni-Shield</h1>
+          <button
+            id="themeToggle"
+            class="theme-toggle"
+            aria-label="Toggle theme"
+          >
+            <span class="theme-icon">◐</span>
+          </button>
+        </div>
+        <p id="statusText" class="status">Loading...</p>
+      </header>
+
+      <!-- Master Toggle -->
+      <section class="section">
+        <label class="toggle-label">
+          <span class="label-text">Enable Cogni-Shield</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="masterToggle" class="toggle-input" />
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Feature Toggles -->
+      <section class="section" id="featuresSection">
+        <h2 class="section-title">Features</h2>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="focusMode" class="checkbox" />
+          <span class="checkbox-text">Focus Mode</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="readabilityMode" class="checkbox" />
+          <span class="checkbox-text">Readability Mode</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="semanticDecanter" class="checkbox" />
+          <span class="checkbox-text">Semantic Decanter (AI)</span>
+        </label>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Intensity Slider -->
+      <section class="section" id="intensitySection">
+        <h2 class="section-title">Intensity</h2>
+        <div class="slider-container">
+          <label for="intensitySlider" class="slider-label">
+            <span>Low</span>
+            <span>High</span>
+          </label>
+          <input
+            type="range"
+            id="intensitySlider"
+            class="slider"
+            min="1"
+            max="5"
+            value="3"
+            aria-label="Intensity level"
+          />
+          <div class="slider-value" id="intensityValue">Medium</div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Disclaimer -->
+      <footer class="footer">
+        <p class="disclaimer">AI features run only when manually triggered.</p>
+      </footer>
+    </div>
+
+    <script src="popup.js" defer></script>
+    <script src="../config.js"></script>
+    <script src="../aiClient.js"></script>
+  </body>
+</html>
