@@ -13,16 +13,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": [
-        "observer.js",
-        "aiClient.js",
-        "features/visualGuard.js",
-        "features/spotlight.js",
-        "features/focusMode.js",
-        "features/readability.js",
-        "main.js"
-      ],
-      "run_at": "document_start"
+      "js": ["observer.js", "aiClient.js", "features/visualGuard.js", "features/readability.js","main.js"]
     }
   ]
 }

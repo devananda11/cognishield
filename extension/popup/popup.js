@@ -4,7 +4,7 @@ const DEFAULT_SETTINGS = {
   focusMode: false,
   readabilityMode: false,
   semanticDecanter: false,
-  cursorSpotlight: false,
+  cursorSpotlight: false, // ✅ ADDED
   intensity: 3,
   theme: "light",
 };
@@ -15,6 +15,10 @@ const INTENSITY_LABELS = {
 
 const elements = {
   masterToggle: document.getElementById("masterToggle"),
+  focusMode: document.getElementById("focusMode"),
+  readabilityMode: document.getElementById("readabilityMode"),
+  semanticDecanter: document.getElementById("semanticDecanter"),
+  cursorSpotlight: document.getElementById("cursorSpotlight"), // ✅ ADDED
   intensitySlider: document.getElementById("intensitySlider"),
   intensityValue: document.getElementById("intensityValue"),
   focusMode: document.getElementById("focusMode"),
@@ -33,41 +37,132 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function updateUI() {
-  if (elements.masterToggle) elements.masterToggle.checked = settings.enabled;
-  if (elements.intensitySlider) {
-    elements.intensitySlider.value = settings.intensity;
-    elements.intensityValue.textContent = INTENSITY_LABELS[settings.intensity];
+  // Master toggle
+  elements.masterToggle.checked = settings.enabled;
+
+  // Feature toggles
+  elements.focusMode.checked = settings.focusMode;
+  elements.readabilityMode.checked = settings.readabilityMode;
+  elements.semanticDecanter.checked = settings.semanticDecanter;
+  elements.cursorSpotlight.checked = settings.cursorSpotlight; // ✅ ADDED
+
+  // Intensity slider
+  elements.intensitySlider.value = settings.intensity;
+  elements.intensityValue.textContent = INTENSITY_LABELS[settings.intensity];
+
+  updateStatusText();
+  updateDisabledState();
+}
+
+// Update status text
+function updateStatusText() {
+  if (settings.enabled) {
+    const activeFeatures = [
+      settings.focusMode && "Focus",
+      settings.readabilityMode && "Readability",
+      settings.semanticDecanter && "AI",
+      settings.cursorSpotlight && "Spotlight", // ✅ ADDED
+    ].filter(Boolean);
+
+    elements.statusText.textContent =
+      activeFeatures.length > 0
+        ? `Active: ${activeFeatures.join(", ")}`
+        : "Cogni-Shield is active";
+  } else {
+    elements.statusText.textContent = "Cogni-Shield is inactive";
   }
   if (elements.focusMode) elements.focusMode.checked = settings.focusMode;
   if (elements.cursorSpotlight) elements.cursorSpotlight.checked = settings.cursorSpotlight;
 }
 
-function saveAndNotify(key, value) {
+// Disable feature controls if master toggle is off
+function updateDisabledState() {
+  if (settings.enabled) {
+    elements.featuresSection.classList.remove("disabled");
+    elements.intensitySection.classList.remove("disabled");
+    elements.intensitySlider.disabled = false;
+  } else {
+    elements.featuresSection.classList.add("disabled");
+    elements.intensitySection.classList.add("disabled");
+    elements.intensitySlider.disabled = true;
+  }
+}
+
+// Save settings
+function saveSettings(key, value) {
   settings[key] = value;
   chrome.storage.local.set({ [key]: value }, () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          type: "COGNI_SHIELD_SETTINGS_CHANGED",
-          settings: settings
-        });
-      }
+    updateStatusText();
+    updateDisabledState();
+    notifyContentScript();
+  });
+}
+
+// Notify content script
+function notifyContentScript() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs[0]) return;
+
+    chrome.tabs.sendMessage(tabs[0].id, {
+      type: "COGNI_SHIELD_SETTINGS_CHANGED",
+      settings: {
+        enabled: settings.enabled,
+        focusMode: settings.focusMode,
+        readabilityMode: settings.readabilityMode,
+        semanticDecanter: settings.semanticDecanter,
+        cursorSpotlight: settings.cursorSpotlight, // ✅ ADDED
+        intensity: settings.intensity,
+      },
     });
   });
 }
 
-function attachListeners() {
-  elements.masterToggle?.addEventListener("change", (e) => saveAndNotify("enabled", e.target.checked));
-  
-  elements.intensitySlider?.addEventListener("input", (e) => {
-    const val = parseInt(e.target.value);
-    elements.intensityValue.textContent = INTENSITY_LABELS[val];
-  });
-
-  elements.intensitySlider?.addEventListener("change", (e) => {
-    saveAndNotify("intensity", parseInt(e.target.value));
-  });
-
-  elements.focusMode?.addEventListener("change", (e) => saveAndNotify("focusMode", e.target.checked));
-  elements.cursorSpotlight?.addEventListener("change", (e) => saveAndNotify("cursorSpotlight", e.target.checked));
+// Apply theme
+function applyTheme(theme) {
+  document.body.classList.toggle("dark-theme", theme === "dark");
 }
+
+// Toggle theme
+function toggleTheme() {
+  const newTheme = settings.theme === "light" ? "dark" : "light";
+  settings.theme = newTheme;
+  chrome.storage.local.set({ theme: newTheme });
+  applyTheme(newTheme);
+}
+
+// Attach event listeners
+function attachEventListeners() {
+  elements.masterToggle.addEventListener("change", (e) =>
+    saveSettings("enabled", e.target.checked)
+  );
+
+  elements.focusMode.addEventListener("change", (e) =>
+    saveSettings("focusMode", e.target.checked)
+  );
+
+  elements.readabilityMode.addEventListener("change", (e) =>
+    saveSettings("readabilityMode", e.target.checked)
+  );
+
+  elements.semanticDecanter.addEventListener("change", (e) =>
+    saveSettings("semanticDecanter", e.target.checked)
+  );
+
+  elements.cursorSpotlight.addEventListener("change", (e) =>
+    saveSettings("cursorSpotlight", e.target.checked)
+  ); // ✅ ADDED
+
+  elements.intensitySlider.addEventListener("input", (e) => {
+    const value = parseInt(e.target.value);
+    elements.intensityValue.textContent = INTENSITY_LABELS[value];
+  });
+
+  elements.intensitySlider.addEventListener("change", (e) =>
+    saveSettings("intensity", parseInt(e.target.value))
+  );
+
+  elements.themeToggle.addEventListener("click", toggleTheme);
+}
+
+// Init
+document.addEventListener("DOMContentLoaded", init);

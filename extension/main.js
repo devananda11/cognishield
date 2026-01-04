@@ -1,18 +1,21 @@
 // main.js - UNIFIED CONTENT SCRIPT
 console.log("Cogni-Shield: Content script active.");
 
-/**
- * The Brain: Orchestrates all features based on settings
- */
-window.runShield = function(settings) {
-  if (!settings) return;
-  
-  console.log("Shield Sync -> Enabled:", settings.enabled, "Intensity:", settings.intensity);
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type !== "COGNI_SHIELD_SETTINGS_CHANGED") return;
 
-  // 1. Core Sensory Firewall (Visual Guard)
-  // This handles the video slow-motion and dimming
+  console.log("Received settings:", msg.settings);
+
+  // Existing Visual Guard
   if (window.applyVisualGuard) {
-    window.applyVisualGuard(settings);
+    window.applyVisualGuard(msg.settings);
+  }
+
+  // ✅ ADD THIS — Readability Mode
+  if (msg.settings.enabled && msg.settings.readabilityMode) {
+    window.CogniShield?.enableReadability();
+  } else {
+    window.CogniShield?.disableReadability();
   }
 
   // 2. Readability Mode (Text/Font adjustments)
