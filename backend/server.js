@@ -19,7 +19,13 @@ app.post("/ai/simplify", async (req, res) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
-            { parts: [{ text: `Rewrite this in simpler language:\n${text}` }] },
+            {
+              parts: [
+                {
+                  text: `Rewrite the following text as a single, well-structured, clear answer. Do not provide options or alternatives. Use simple language, short sentences, and break down complex ideas. Present the information in a logical, easy-to-read format, suitable for people with ADHD and cognitive disabilities.\n\nText:\n${text}`,
+                },
+              ],
+            },
           ],
         }),
       }

@@ -1,4 +1,4 @@
-// Default settings
+// popup.js
 const DEFAULT_SETTINGS = {
   enabled: true,
   focusMode: false,
@@ -9,16 +9,10 @@ const DEFAULT_SETTINGS = {
   theme: "light",
 };
 
-// Intensity labels
 const INTENSITY_LABELS = {
-  1: "Very Low",
-  2: "Low",
-  3: "Medium",
-  4: "High",
-  5: "Very High",
+  1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High"
 };
 
-// DOM Elements
 const elements = {
   masterToggle: document.getElementById("masterToggle"),
   focusMode: document.getElementById("focusMode"),
@@ -27,31 +21,21 @@ const elements = {
   cursorSpotlight: document.getElementById("cursorSpotlight"), // ✅ ADDED
   intensitySlider: document.getElementById("intensitySlider"),
   intensityValue: document.getElementById("intensityValue"),
-  statusText: document.getElementById("statusText"),
-  themeToggle: document.getElementById("themeToggle"),
-  featuresSection: document.getElementById("featuresSection"),
-  intensitySection: document.getElementById("intensitySection"),
+  focusMode: document.getElementById("focusMode"),
+  readabilityMode: document.getElementById("readabilityMode"),
+  cursorSpotlight: document.getElementById("cursorSpotlight"),
 };
 
-// Current settings
 let settings = { ...DEFAULT_SETTINGS };
 
-// Initialize popup
-function init() {
-  loadSettings();
-  attachEventListeners();
-}
-
-// Load settings from chrome.storage.local
-function loadSettings() {
+document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(DEFAULT_SETTINGS, (result) => {
     settings = result;
     updateUI();
-    applyTheme(settings.theme);
+    attachListeners();
   });
-}
+});
 
-// Update UI based on current settings
 function updateUI() {
   // Master toggle
   elements.masterToggle.checked = settings.enabled;
@@ -87,6 +71,8 @@ function updateStatusText() {
   } else {
     elements.statusText.textContent = "Cogni-Shield is inactive";
   }
+  if (elements.focusMode) elements.focusMode.checked = settings.focusMode;
+  if (elements.cursorSpotlight) elements.cursorSpotlight.checked = settings.cursorSpotlight;
 }
 
 // Disable feature controls if master toggle is off

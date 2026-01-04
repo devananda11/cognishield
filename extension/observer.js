@@ -1,28 +1,15 @@
 // observer.js
-const callbacks = [];
+let pageMutationObserver = null; // RENAMED to stop clash
 
-// Features register themselves here
-window.registerFeature = function (fn) {
-  if (typeof fn === "function") {
-    callbacks.push(fn);
-  }
-};
-
-// One shared MutationObserver
-const observer = new MutationObserver(() => {
-  callbacks.forEach((fn) => {
-    try {
-      fn();
-    } catch (e) {
-      console.warn("Cogni-Shield feature failed:", e);
-    }
+function initPageObserver() {
+  if (pageMutationObserver) return;
+  
+  pageMutationObserver = new MutationObserver((mutations) => {
+    // Your specific observation logic for Cogni-Shield
+    console.log("Page change detected by Cogni-Shield");
   });
-});
 
-// Start observing once DOM is ready
-if (document.body) {
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  pageMutationObserver.observe(document.body, { childList: true, subtree: true });
 }
+
+window.initPageObserver = initPageObserver;

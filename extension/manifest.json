@@ -2,11 +2,14 @@
   "manifest_version": 3,
   "name": "CogniShield Extension",
   "version": "1.0",
-  "description": "CogniShield browser extension.",
+  "description": "A unified sensory firewall for inclusive web access.",
   "action": {
     "default_popup": "popup/popup.html"
   },
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "contextMenus"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
