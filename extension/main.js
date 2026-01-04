@@ -19,26 +19,30 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 
   // 2. Readability Mode (Text/Font adjustments)
-  if (settings.enabled && settings.readabilityMode) {
+  if (msg.settings.enabled && msg.settings.readabilityMode) {
     window.CogniShield?.enableReadability?.();
   } else {
     window.CogniShield?.disableReadability?.();
   }
 
   // 3. Focus Mode (Hiding distractions)
-  if (settings.enabled && settings.focusMode) {
+  if (msg.settings.enabled && msg.settings.focusMode) {
     window.FocusMode?.enable?.();
   } else {
     window.FocusMode?.disable?.();
   }
-  
+
   // 4. Cursor Spotlight
-  if (settings.enabled && settings.cursorSpotlight && window.enableCursorSpotlight) {
+  if (
+    msg.settings.enabled &&
+    msg.settings.cursorSpotlight &&
+    window.enableCursorSpotlight
+  ) {
     window.enableCursorSpotlight();
   } else if (window.disableCursorSpotlight) {
     window.disableCursorSpotlight();
   }
-};
+});
 
 // --- INITIALIZATION ---
 
@@ -51,10 +55,13 @@ chrome.storage.local.get(null, (settings) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "COGNI_SHIELD_SETTINGS_CHANGED") {
     window.runShield(msg.settings);
-    if (sendResponse) sendResponse({status: "ok"});
+    if (sendResponse) sendResponse({ status: "ok" });
   }
   return true; // Keeps the message channel open
 });
 
 // 3. AI Helper (Available for features to call)
-console.log("Gemini AI Integration:", typeof window.simplifyTextWithAI !== "undefined" ? "READY" : "OFFLINE");
+console.log(
+  "Gemini AI Integration:",
+  typeof window.simplifyTextWithAI !== "undefined" ? "READY" : "OFFLINE"
+);
