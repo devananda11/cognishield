@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "CogniShield Extension",
   "version": "1.0",
-  "description": "CogniShield browser extension.",
+  "description": "A unified sensory firewall for inclusive web access.",
   "action": {
     "default_popup": "popup/popup.html"
   },
@@ -15,10 +15,14 @@
       "matches": ["<all_urls>"],
       "js": [
         "observer.js",
+        "aiClient.js",
         "features/visualGuard.js",
-        "features/semanticDecanter.js",
+        "features/spotlight.js",
+        "features/focusMode.js",
+        "features/readability.js",
         "main.js"
-      ]
+      ],
+      "run_at": "document_start"
     }
   ]
 }
