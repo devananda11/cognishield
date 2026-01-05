@@ -1,126 +1,99 @@
-// focusMode.js
-// Owner: Focus Mode (Person B)
-
+// features/focusMode.js
 const FocusMode = (() => {
-
+  // Selectors for elements that cause sensory overload or distraction
   const HIDE_SELECTORS = [
-    "[role='dialog']",
-    ".modal",
-    ".popup",
-    ".cookie",
-    ".consent",
-    ".newsletter"
-  ];
-
-  // ⚠️ ONLY ad/promotional blocks (no layout containers)
-  const DIM_SELECTORS = [
-    ".ad",
-    ".ads",
-    ".advertisement",
-    ".promo",
-    ".promotion",
-    ".sponsored",
-    "[class^='ad-']",
-    "[id^='ad-']"
+    "[role='dialog']", ".modal", ".popup", ".cookie", ".consent", ".newsletter",
+    "header", "footer", "aside", "#sidebar", ".sidebar", "#secondary", 
+    "#related", "#comments", "ytd-live-chat-frame", "ytd-guide-renderer",
+    "nav", ".ads", ".sidebar-container"
   ];
 
   let styleNode = null;
 
-  /* ---------- POPUPS ---------- */
-  function hideElements() {
-    HIDE_SELECTORS.forEach(selector => {
-      document.querySelectorAll(selector).forEach(el => {
-        el.dataset.focusHidden = "true";
-        el.style.display = "none";
-      });
-    });
-  }
-
-  /* ---------- OVERLAY BACKDROPS ---------- */
-  function removeOverlayBackdrops() {
-    document.querySelectorAll("*").forEach(el => {
-      const style = window.getComputedStyle(el);
-
-      const isOverlay =
-        (style.position === "fixed" || style.position === "absolute") &&
-        Number(style.zIndex) > 1000 &&
-        el.offsetWidth >= window.innerWidth * 0.9 &&
-        el.offsetHeight >= window.innerHeight * 0.9 &&
-        el.innerText.length < 500; // 🔒 protect content blocks
-
-      if (isOverlay) {
-        el.dataset.focusOverlay = "true";
-        el.style.display = "none";
-      }
-    });
-
-    // restore scroll
-    document.body.style.overflow = "auto";
-    document.documentElement.style.overflow = "auto";
-  }
-
-  /* ---------- ADS ONLY ---------- */
-  function dimAdsOnly() {
-    DIM_SELECTORS.forEach(selector => {
-      document.querySelectorAll(selector).forEach(el => {
-        // ❌ NEVER dim main content
-        if (el.closest("main, article")) return;
-
-        el.dataset.focusDimmed = "true";
-        el.style.opacity = "0.25";
-        el.style.pointerEvents = "none";
-      });
-    });
-  }
-
-  /* ---------- MOTION ---------- */
-  function stopAnimations() {
-    if (styleNode) return;
-
+  /**
+   * injectFocusStyles: Creates the 'Tunnel Vision' layout.
+   * It centers the content and masks the peripheral area with black.
+   */
+  function injectFocusStyles() {
+    if (document.getElementById("focus-tunnel-style")) return;
     styleNode = document.createElement("style");
+    styleNode.id = "focus-tunnel-style";
     styleNode.textContent = `
+      /* 1. Force the background behind the tunnel to be black */
+      html, body {
+        background-color: #000000 !important;
+        background-image: none !important;
+        overflow-x: hidden !important;
+      }
+
+      /* 2. Hide all distracting UI elements */
+      ${HIDE_SELECTORS.join(", ")} {
+        display: none !important;
+      }
+
+      /* 3. The TUNNEL: Isolate and center the primary content area */
+      main, article, #content, .main-content, #center-col, #primary, .article-body {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        float: none !important;
+        width: 100% !important;
+        max-width: 800px !important; /* Ideal width for reading focus */
+        padding: 60px !important;
+        background: #ffffff !important; /* White 'paper' content */
+        color: #1a1a1a !important;      /* Sharp text contrast */
+        position: relative !important;
+        z-index: 1000 !important;
+        
+        /* 🛡️ This massive shadow blacks out everything to the left and right */
+        box-shadow: 0 0 0 5000px #000000 !important; 
+        border-radius: 4px !important;
+      }
+
+      /* 4. Ensure images and videos fit inside the tunnel */
+      main img, article img, video {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+
+      /* 5. Disable all animations/transitions */
       * {
         animation: none !important;
         transition: none !important;
+      }
+
+      /* 6. Fix scrolling in case a popup disabled it */
+      html {
+        overflow-y: scroll !important;
       }
     `;
     document.head.appendChild(styleNode);
   }
 
-  function pauseVideos() {
-    document.querySelectorAll("video").forEach(v => v.pause());
-  }
-
-  /* ---------- RESTORE ---------- */
-  function restoreAll() {
-    document.querySelectorAll(
-      "[data-focus-hidden], [data-focus-dimmed], [data-focus-overlay]"
-    ).forEach(el => {
-      el.style.display = "";
-      el.style.opacity = "";
-      el.style.pointerEvents = "";
-      delete el.dataset.focusHidden;
-      delete el.dataset.focusDimmed;
-      delete el.dataset.focusOverlay;
-    });
-
-    if (styleNode) styleNode.remove();
-    styleNode = null;
-  }
-
   return {
     enable() {
-      hideElements();
-      removeOverlayBackdrops(); // 🔥 MUST RUN FIRST
-      dimAdsOnly();
-      stopAnimations();
-      pauseVideos();
+      console.log("Focus Mode: Tunnel Vision Enabled.");
+      injectFocusStyles();
+      
+      // Secondary pass to hide any fixed/sticky elements that float over the tunnel
+      document.querySelectorAll("*").forEach(el => {
+        const s = window.getComputedStyle(el);
+        // Hide fixed elements (like sticky headers) unless they are inside our content tunnel
+        if (s.position === "fixed" && !el.closest("main, article, #content, #primary")) {
+           el.style.setProperty("display", "none", "important");
+        }
+      });
     },
     disable() {
-      restoreAll();
+      console.log("Focus Mode: Restoring original layout.");
+      const node = document.getElementById("focus-tunnel-style");
+      if (node) node.remove();
+      styleNode = null;
+      
+      // Force a layout refresh
+      window.dispatchEvent(new Event('resize'));
     }
   };
-
 })();
 
+// Expose the module to the global window object for main.js to call
 window.FocusMode = FocusMode;

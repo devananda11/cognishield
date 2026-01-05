@@ -1,27 +1,25 @@
 // main.js - UNIFIED CONTENT SCRIPT
 console.log("Cogni-Shield: Content script active.");
 
-/**
- * Unified Runner: Handles all feature toggles based on settings
- */
 window.runShield = function(settings) {
   if (!settings) return;
   
   console.log("Applying Cogni-Shield settings:", settings);
 
-  // 1. Visual Guard (Flash/Luminance Protection)
+  // 1. Visual Guard (MVP) - Independent check
+  // We call this first so it always protects the user
   if (window.applyVisualGuard) {
     window.applyVisualGuard(settings);
   }
 
-  // 2. Readability Mode (Font/Text adjustments)
+  // 2. Readability Mode
   if (settings.enabled && settings.readabilityMode) {
     window.CogniShield?.enableReadability?.();
   } else {
     window.CogniShield?.disableReadability?.();
   }
 
-  // 3. Focus Mode (Hiding distractions)
+  // 3. Focus Mode
   if (settings.enabled && settings.focusMode) {
     window.FocusMode?.enable?.();
   } else {
@@ -31,27 +29,28 @@ window.runShield = function(settings) {
   // 4. Cursor Spotlight
   if (settings.enabled && settings.cursorSpotlight && window.enableCursorSpotlight) {
     window.enableCursorSpotlight();
-  } else if (window.disableCursorSpotlight) {
-    window.disableCursorSpotlight();
+  } else {
+    window.disableCursorSpotlight?.();
+  }
+
+  // 5. Semantic Decanter
+  if (settings.enabled && settings.semanticMode) {
+    window.SemanticDecanter?.enable?.();
+  } else {
+    window.SemanticDecanter?.disable?.();
   }
 };
 
-// --- INITIALIZATION ---
-
-// 1. Initial Load from Storage
+// Initial Load
 chrome.storage.local.get(null, (settings) => {
   window.runShield(settings);
 });
 
-// 2. Listen for Live Popup Updates
+// Live Updates
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "COGNI_SHIELD_SETTINGS_CHANGED") {
-    // Pass the settings object from the message to the runner
     window.runShield(msg.settings);
     if (sendResponse) sendResponse({status: "ok"});
   }
-  return true; // Keeps the message channel open for async responses
+  return true; 
 });
-
-// 3. AI Helper Status Check
-console.log("Gemini AI Integration:", typeof window.simplifyTextWithAI !== "undefined" ? "READY" : "OFFLINE");

@@ -5,12 +5,7 @@ const DEFAULT_SETTINGS = {
   readabilityMode: false,
   semanticDecanter: false,
   cursorSpotlight: false, // ✅ ADDED
-  intensity: 3,
   theme: "light",
-};
-
-const INTENSITY_LABELS = {
-  1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High"
 };
 
 const elements = {
@@ -18,12 +13,10 @@ const elements = {
   focusMode: document.getElementById("focusMode"),
   readabilityMode: document.getElementById("readabilityMode"),
   semanticDecanter: document.getElementById("semanticDecanter"),
-  cursorSpotlight: document.getElementById("cursorSpotlight"), // ✅ ADDED
-  intensitySlider: document.getElementById("intensitySlider"),
-  intensityValue: document.getElementById("intensityValue"),
-  focusMode: document.getElementById("focusMode"),
-  readabilityMode: document.getElementById("readabilityMode"),
   cursorSpotlight: document.getElementById("cursorSpotlight"),
+  statusText: document.getElementById("statusText"), // ✅ FIXED
+  featuresSection: document.getElementById("featuresSection"), // ✅ ADDED
+  themeToggle: document.getElementById("themeToggle"),
 };
 
 let settings = { ...DEFAULT_SETTINGS };
@@ -31,24 +24,24 @@ let settings = { ...DEFAULT_SETTINGS };
 document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(DEFAULT_SETTINGS, (result) => {
     settings = result;
+    applyTheme(settings.theme);
     updateUI();
-    attachListeners();
+    attachEventListeners();
   });
 });
 
 function updateUI() {
   // Master toggle
-  elements.masterToggle.checked = settings.enabled;
+  if (elements.masterToggle) elements.masterToggle.checked = settings.enabled;
 
   // Feature toggles
-  elements.focusMode.checked = settings.focusMode;
-  elements.readabilityMode.checked = settings.readabilityMode;
-  elements.semanticDecanter.checked = settings.semanticDecanter;
-  elements.cursorSpotlight.checked = settings.cursorSpotlight; // ✅ ADDED
-
-  // Intensity slider
-  elements.intensitySlider.value = settings.intensity;
-  elements.intensityValue.textContent = INTENSITY_LABELS[settings.intensity];
+  if (elements.focusMode) elements.focusMode.checked = settings.focusMode;
+  if (elements.readabilityMode)
+    elements.readabilityMode.checked = settings.readabilityMode;
+  if (elements.semanticDecanter)
+    elements.semanticDecanter.checked = settings.semanticDecanter;
+  if (elements.cursorSpotlight)
+    elements.cursorSpotlight.checked = settings.cursorSpotlight; // ✅ ADDED
 
   updateStatusText();
   updateDisabledState();
@@ -72,19 +65,17 @@ function updateStatusText() {
     elements.statusText.textContent = "Cogni-Shield is inactive";
   }
   if (elements.focusMode) elements.focusMode.checked = settings.focusMode;
-  if (elements.cursorSpotlight) elements.cursorSpotlight.checked = settings.cursorSpotlight;
+  if (elements.cursorSpotlight)
+    elements.cursorSpotlight.checked = settings.cursorSpotlight;
 }
 
 // Disable feature controls if master toggle is off
 function updateDisabledState() {
+  if (!elements.featuresSection) return;
   if (settings.enabled) {
     elements.featuresSection.classList.remove("disabled");
-    elements.intensitySection.classList.remove("disabled");
-    elements.intensitySlider.disabled = false;
   } else {
     elements.featuresSection.classList.add("disabled");
-    elements.intensitySection.classList.add("disabled");
-    elements.intensitySlider.disabled = true;
   }
 }
 
@@ -111,7 +102,6 @@ function notifyContentScript() {
         readabilityMode: settings.readabilityMode,
         semanticDecanter: settings.semanticDecanter,
         cursorSpotlight: settings.cursorSpotlight, // ✅ ADDED
-        intensity: settings.intensity,
       },
     });
   });
@@ -132,37 +122,40 @@ function toggleTheme() {
 
 // Attach event listeners
 function attachEventListeners() {
-  elements.masterToggle.addEventListener("change", (e) =>
-    saveSettings("enabled", e.target.checked)
-  );
+  if (elements.masterToggle) {
+    elements.masterToggle.addEventListener("change", (e) =>
+      saveSettings("enabled", e.target.checked)
+    );
+  }
 
-  elements.focusMode.addEventListener("change", (e) =>
-    saveSettings("focusMode", e.target.checked)
-  );
+  if (elements.focusMode) {
+    elements.focusMode.addEventListener("change", (e) =>
+      saveSettings("focusMode", e.target.checked)
+    );
+  }
 
-  elements.readabilityMode.addEventListener("change", (e) =>
-    saveSettings("readabilityMode", e.target.checked)
-  );
+  if (elements.readabilityMode) {
+    elements.readabilityMode.addEventListener("change", (e) =>
+      saveSettings("readabilityMode", e.target.checked)
+    );
+  }
 
-  elements.semanticDecanter.addEventListener("change", (e) =>
-    saveSettings("semanticDecanter", e.target.checked)
-  );
+  if (elements.semanticDecanter) {
+    elements.semanticDecanter.addEventListener("change", (e) =>
+      saveSettings("semanticDecanter", e.target.checked)
+    );
+  }
 
-  elements.cursorSpotlight.addEventListener("change", (e) =>
-    saveSettings("cursorSpotlight", e.target.checked)
-  ); // ✅ ADDED
+  if (elements.cursorSpotlight) {
+    elements.cursorSpotlight.addEventListener("change", (e) =>
+      saveSettings("cursorSpotlight", e.target.checked)
+    );
+  }
 
-  elements.intensitySlider.addEventListener("input", (e) => {
-    const value = parseInt(e.target.value);
-    elements.intensityValue.textContent = INTENSITY_LABELS[value];
-  });
-
-  elements.intensitySlider.addEventListener("change", (e) =>
-    saveSettings("intensity", parseInt(e.target.value))
-  );
-
-  elements.themeToggle.addEventListener("click", toggleTheme);
+  if (elements.themeToggle) {
+    elements.themeToggle.addEventListener("click", toggleTheme);
+  }
 }
 
 // Init
-document.addEventListener("DOMContentLoaded", init);
+// Removed duplicate/unnecessary init call (already handled above)

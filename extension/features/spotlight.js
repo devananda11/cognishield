@@ -1,19 +1,21 @@
 // features/spotlight.js
-
 let spotlightOverlay = null;
 let mouseMoveHandler = null;
 
 function createOverlay() {
   const overlay = document.createElement("div");
-  overlay.id = "cogni-spotlight-overlay"; // Added ID for easier tracking
-  overlay.style.position = "fixed";
-  overlay.style.top = "0";
-  overlay.style.left = "0";
-  overlay.style.width = "100vw";
-  overlay.style.height = "100vh";
-  overlay.style.pointerEvents = "none"; 
-  overlay.style.zIndex = "999999";
-  overlay.style.transition = "background 0.1s ease";
+  overlay.id = "cogni-spotlight-overlay";
+  Object.assign(overlay.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100vw",
+    height: "100vh",
+    pointerEvents: "none",
+    zIndex: "999999",
+    background: "rgba(0, 0, 0, 0.8)", // Slightly darker for better contrast
+    transition: "clip-path 0.05s ease-out"
+  });
 
   document.body.appendChild(overlay);
   return overlay;
@@ -21,14 +23,22 @@ function createOverlay() {
 
 function updateSpotlight(x, y) {
   if (!spotlightOverlay) return; 
-  const radius = 120; 
-  spotlightOverlay.style.background = `
-    radial-gradient(
-      circle ${radius}px at ${x}px ${y}px,
-      transparent 0%,
-      rgba(0, 0, 0, 0.6) 80%
-    )
-  `;
+  
+  const width = 160;  // Full width
+  const height = 60;  // Half-height (creating a rectangle reading slot)
+  
+  const hWidth = width / 2;
+  const hHeight = height / 2;
+
+  // Create a rectangle "hole" using clip-path polygon
+  spotlightOverlay.style.clipPath = `polygon(
+    0% 0%, 0% 100%, 100% 100%, 100% 0%, 0% 0%,
+    ${x - hWidth}px ${y - hHeight}px, 
+    ${x + hWidth}px ${y - hHeight}px, 
+    ${x + hWidth}px ${y + hHeight}px, 
+    ${x - hWidth}px ${y + hHeight}px, 
+    ${x - hWidth}px ${y - hHeight}px
+  )`;
 }
 
 function enableCursorSpotlight() {
@@ -49,42 +59,5 @@ function disableCursorSpotlight() {
   mouseMoveHandler = null;
 }
 
-// ✅ FIX: Added a check for 'elements' to prevent crash if UI isn't loaded
-function initListeners() {
-  // If 'elements' is defined (usually in your popup/options script)
-  if (typeof elements !== 'undefined') {
-    elements.semanticDecanter?.addEventListener("change", (e) =>
-      saveSettings("semanticDecanter", e.target.checked)
-    );
-
-    elements.cursorSpotlight?.addEventListener("change", (e) =>
-      saveSettings("cursorSpotlight", e.target.checked)
-    );
-
-    elements.intensitySlider?.addEventListener("input", (e) => {
-      const value = parseInt(e.target.value);
-      if (elements.intensityValue && typeof INTENSITY_LABELS !== 'undefined') {
-          elements.intensityValue.textContent = INTENSITY_LABELS[value];
-      }
-    });
-
-    elements.intensitySlider?.addEventListener("change", (e) =>
-      saveSettings("intensity", parseInt(e.target.value))
-    );
-
-    elements.themeToggle?.addEventListener("click", toggleTheme);
-  }
-}
-
-// Ensure the DOM is fully ready before attaching listeners
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initListeners);
-} else {
-  initListeners();
-}
-
-// ✅ EXPOSE GLOBALLY: This replaces the 'export' keywords
 window.enableCursorSpotlight = enableCursorSpotlight;
 window.disableCursorSpotlight = disableCursorSpotlight;
-
-console.log("CURSOR SPOTLIGHT SCRIPT LOADED");
